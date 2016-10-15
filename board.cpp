@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>  
-
+#include <stdexcept>
+#include <stdio.h>
+ 
 using namespace std;
 
 struct Spot{
@@ -11,23 +13,24 @@ struct Spot{
     bool isFlagged;
     Spot(){
         isBomb = false;
-        isRevealed = false;
+        isRevealed = true;
         isFlagged = false;
-        value=0;
+        value = 0;
     };
     ~Spot(){};
     
-    void Click(bool flag){
+    bool Click(bool flag){
         if(!flag && !isFlagged){ //click it, click it good
         isRevealed = true;
         return isBomb;
         }
         if(flag){
             isFlagged = !isFlagged;  //toggle flag
+            return false;
         }
     }
     void Bomb(){
-        bomb = true;
+        isBomb = true;
     }
     
 };
@@ -38,16 +41,36 @@ Spot** initializeBoard(int width, int height){
     for (int i = 0; i < width; i++){
         board[i] = new Spot[height];
     }
+    for (int j = 0; j < width; j++){
+        for (int k = 0; k < height; k++){
+            cout << board[j][k].value;
+        }
+        cout << endl;
+    }
     return board;
 }
 
-Spot** generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, int y){
+int count(int x, int y, Spot** &aBoard, int height, int width){
+    int total = 0;
+    
+    for (int i = -1; i < 2; i++){
+        for (int j = -1; j < 2; j++){
+            if (!(x+i < 0 || x+i >= width || y+j < 0 || y+j >= height) && aBoard[x+i][y+j].isBomb){
+                total++;
+            }
+        }
+    }
+    return total;
+}
+
+void generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, int y){
     srand(time(NULL));
-    bombsDropped=0;
+    int bombsDropped=0;
     for(int i = 0 ; i < width; i++){
         for (int j = 0; j < height; j++){
-            if(bombsDropped <= bombs){
-                aBoard[i][j]->Bomb();
+            if(bombsDropped < bombs){
+                aBoard[i][j].Bomb();
+                    bombsDropped++;
             } else {
                 break;
             }
@@ -76,40 +99,28 @@ Spot** generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, in
     
     for (int j = 0; j < width; j++){
         for (int k = 0; k < height; k++){
-            if (!aBoard[j][k]->isBomb){
-                aBoard[j][k]->value = count(j,k);
+            if (!aBoard[j][k].isBomb){
+                aBoard[j][k].value = count(j,k, aBoard, height, width);
             }
         }
     }
     
-    return aBoard;
-}
-
-int count(int x, int y, Spot** &aBoard, int height, int width){
-    int total = 0;
-    
-    for (int i = -1; i < 2; i++){
-        for (int j = -1; j < 2; j++){
-            if (!(x+i < 0 || x+i > width || y+j < 0 || y+j > height) && aBoard[x+i][y+j]->isBomb){
-                total++;
-            }
-        }
-    }
 }
 
 bool reveal(Spot** &aBoard, int x, int y, int height, int width){
-    bool result = aBoard[x][y]->click();
-    if (aBoard[x][y]->value == 0){
+    bool result = aBoard[x][y].Click(false);
+    if (aBoard[x][y].value == 0){
         for (int i = -1; i < 2; i++){
         for (int j = -1; j < 2; j++){
-            if (!(x+i < 0 || x+i > width || y+j < 0 || y+j > height) && aBoard[x+i][y+j]->isBomb){
-                if(reveal(&aBoard, x+i, y+j, height, width)){
+            if (!(x+i < 0 || x+i > width || y+j < 0 || y+j > height) && aBoard[x+i][y+j].isBomb){
+                if(reveal(aBoard, x+i, y+j, height, width)){
                     throw runtime_error("We done screwed up, and auto clicked a bomb :(");
                 }
             }
         }
     }
     return result;
+}
 }
 
 void deleteBoard(Spot** aBoard, int width){
@@ -119,6 +130,44 @@ void deleteBoard(Spot** aBoard, int width){
     delete[] aBoard;
 }
 
+void drawBoard(Spot** &aBoard, int width, int height){
+	cout << " _";
+	for (int i = 0; i < width; i++)
+	{
+		cout << i << "_";
+	}
+	cout << endl;
+	
+	for (int y = 0; y < height; y++){
+	    cout << y << "|";
+	    for (int x = 0; x < width; x++){
+	        if (aBoard[x][y].isRevealed){
+	            if (aBoard[x][y].isBomb){
+	                cout << "b" << "|";
+	            }
+	            else if (aBoard[x][y].value == 0){
+	                cout << "_" << "|";
+	            }
+	            else {
+	                cout << aBoard[x][y].value << "|";
+	            }
+	        }
+	        else if (aBoard[x][y].isFlagged){
+	            cout << "!" << "|";
+	        }
+	        else {
+	            cout << "0" << "|";
+	        }
+	    }
+	    cout << endl;
+	        
+	  }
+}
+
+
 int main(){
-    return 0;
+    Spot** board = initializeBoard(5, 5);
+    generateBoard(board, 5, 5, 2, 0, 0);
+    drawBoard(board, 5, 5);
+    deleteBoard(board, 5);
 }
