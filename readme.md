@@ -2,6 +2,11 @@
 
 # Command Line Minesweeper
 
+# Trevor Buttrey, Sam Kossey, Ishaani Priyadarshini, Nitya Krishnan
+
+# Compile line: g++-4.9 main.cpp -std=c++11
+# Run: ./a.out row# col# mine#
+
 
 # The following are the rules and recs we have considered for the project.
 # 1)  EXP53-CPP. Do not read uninitialized memory.This is evident from the lines-15-18,40, 49, 62, 83,84 and 126 in board.cpp.
