@@ -3,12 +3,14 @@
 #include <time.h>  
 #include <stdexcept>
 #include <stdio.h>
+#include <random>
+#include <chrono>
 #include <regex>
  
 using namespace std;
 
 //checks if the string entered fits a long friendly format
-bool isNumber(string aString){
+static bool isNumber(string aString){
     regex integer("(\\+|-)?[0-9]+", regex_constants::extended);
     return regex_match(aString,integer);
 }
@@ -18,13 +20,13 @@ struct Spot{
     bool isBomb;
     bool isRevealed;
     bool isFlagged;
-    Spot(){
+    Spot(void){
         isBomb = false;
         isRevealed = false;
         isFlagged = false;
         value = 0;
     };
-    ~Spot(){};
+    ~Spot(void){};
     
     bool Click(bool flag){
         //a regular click
@@ -39,14 +41,14 @@ struct Spot{
         }
     }
     //sets bomb to true
-    void Bomb(){
+    void Bomb(void){
         isBomb = true;
     }
     
 };
 
 //allocates memory for 2d array representing board
-Spot** initializeBoard(int width, int height){
+static Spot** initializeBoard(int width, int height){
     Spot** board;
     board = new Spot*[width];
     for (int i = 0; i < width; i++){
@@ -57,7 +59,7 @@ Spot** initializeBoard(int width, int height){
 }
 
 //counts the number of adjacent bombs given a certain board and spot
-int count(int x, int y, Spot** &aBoard, int height, int width){
+static int count(int x, int y, Spot** &aBoard, int height, int width){
     int total = 0;
     
     for (int i = -1; i < 2; i++){
@@ -72,8 +74,7 @@ int count(int x, int y, Spot** &aBoard, int height, int width){
 }
 
 //adds bombs to the board and counts adjacent bombs to all spaces
-void generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, int y){
-    srand(time(NULL));
+static void generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, int y){
     int bombsDropped=0;
     //drops bombs in order on board until no more remain
     for(int i = 0 ; i < width; i++){
@@ -94,10 +95,17 @@ void generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, int 
     int first;
     int sec;
     //randomizes the location of the bombs by random swaps
+    unsigned seed = static_cast<int> (chrono::system_clock::now().time_since_epoch().count());
+    mt19937 generator(seed);
+    
     for(int i = 0 ; i < width; i++){
         for (int j = 0; j < height; j++){
-            first = rand() % width;
-            sec = rand() % height;
+            uniform_int_distribution<int> distribution(0, width - 1);
+            first = distribution(generator);
+            cout << first << endl;
+            uniform_int_distribution<int> distribution2(0, height - 1);
+            sec = distribution2(generator);
+            cout << sec << endl;
             if (!(i == x && j == y || first == x && sec == y)){
                 swap(aBoard[i][j],aBoard[first][sec]);
             }
@@ -116,7 +124,7 @@ void generateBoard(Spot** &aBoard, int width, int height, int bombs, int x, int 
 
 //given a space, uncovers that space and its surrounding spaces until the 
 //surrounding spaces are >=1 instead of blank
-bool reveal(Spot** &aBoard, int x, int y, int height, int width, bool flag, int &spots){
+static bool reveal(Spot** &aBoard, int x, int y, int height, int width, bool flag, int &spots){
     bool result;
     //if already revealed do nothing
     if (aBoard[x][y].isRevealed){
@@ -160,7 +168,7 @@ bool reveal(Spot** &aBoard, int x, int y, int height, int width, bool flag, int 
 }
 
 //deallocates memory for the 2d array representing the board
-void deleteBoard(Spot** aBoard, int width){
+static void deleteBoard(Spot** aBoard, int width){
     for (int i = 0; i < width; i++){
         delete[] aBoard[i];
     }
@@ -168,7 +176,7 @@ void deleteBoard(Spot** aBoard, int width){
 }
 
 //draws the a user friendly view of the current board
-void drawBoard(Spot** &aBoard, int width, int height){
+static void drawBoard(Spot** &aBoard, int width, int height){
 	cout << " _";
 	for (int i = 0; i < width; i++)
 	{
@@ -217,14 +225,8 @@ int Play(int width, int height, int bombs){
     bool gameOver = false;
     bool flag;
     string flagraw;
-    // cout << "Width ";
-    // cin >> width;
-    // cout << "Height ";
-    // cin >> height;
     int safeSpots = height * width;
-    // cout << "Bombs ";
-    // cin >> bombs;
-    cout << "Createing " << width << "x" << height << " board with " << bombs << " bombs" << endl;
+    cout << "Creating " << width << "x" << height << " board with " << bombs << " bombs" << endl;
     Spot** board = initializeBoard(width, height);
     
     while(!gameOver && safeSpots > bombs){
