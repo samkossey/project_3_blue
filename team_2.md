@@ -42,7 +42,13 @@
 #type information for functions declared in the function declarator rather
 #than in identifier list form
 
+#9 MSC13-C. Detect and remove unused values
+# we ensured that this rec was applied over the entire code, and did not let unused variables and values to stay in code.
 
+#10 in board.cpp
+#DCL19-C. Minimize the scope of variables and functions
+#In for loops declared int i for example (the index) inside of the
+#loop initialization to avoid conflicts later on
 
 #Exceptions
 #1 in board.cpp
@@ -56,10 +62,19 @@
 # changes were made to board.cpp where some improper comment lines were included.
 
 #3 in board.cpp
+#DCL20-C. Explicitly specify void when a function accepts no arguments
+#In Spot() ~Spot() and Bomb() we were passing in no arguments and leaving the
+#parameter blank. We have updated the functions to have void as a parameter 
+#ex/Spot(void)
+
+#4 in board.cpp
 #DCL15-C. Declare file-scope objects or functions that do not
 #need external linkage as static
 #Changed the functions in board.cpp to be static with the exception of Play
-#which will be called in the separate file main
+#which is used in main.cpp
+
+
+
 
 
 
